@@ -9,6 +9,7 @@ import applicationsRouter from "./routes/applications.routes.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 4000;
+const host = "0.0.0.0";
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
 
 app.use(
@@ -51,6 +52,6 @@ app.use(
   },
 );
 
-app.listen(port, () => {
-  console.log(`DevBoard API is running at http://localhost:${port}`);
+app.listen(port, host, () => {
+  console.log(`DevBoard API is running at http://${host}:${port}`);
 });
