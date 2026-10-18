@@ -8,6 +8,7 @@ import { requireTrustedOrigin } from "./middleware/require-trusted-origin.js";
 import applicationsRouter from "./routes/applications.routes.js";
 
 const app = express();
+app.set("trust proxy", 1);
 const port = Number(process.env.PORT) || 4000;
 const host = "0.0.0.0";
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
