@@ -28,6 +28,28 @@ export default function ApplicationsPage() {
   const [message, setMessage] = useState("Loading your applications...");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    setError("");
+    setLoggingOut(true);
+
+    try {
+      const response = await fetch("/api/auth/logout", { method: "POST" });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Could not log out. Please try again.");
+      }
+
+      window.location.assign("/?mode=login");
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Could not reach the API.",
+      );
+      setLoggingOut(false);
+    }
+  }
 
   async function loadApplications() {
     const response = await fetch("/api/applications");
@@ -152,10 +174,22 @@ export default function ApplicationsPage() {
   return (
     <main className="min-h-screen bg-slate-950 p-6 text-white sm:p-8">
       <div className="mx-auto max-w-4xl">
-        <h1 className="text-3xl font-bold">My applications</h1>
-        <p className="mt-2 text-slate-400">
-          Keep your job search organized in one place.
-        </p>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">My applications</h1>
+            <p className="mt-2 text-slate-400">
+              Keep your job search organized in one place.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="rounded-lg bg-slate-800 px-4 py-2 font-medium hover:bg-slate-700 disabled:opacity-50"
+          >
+            {loggingOut ? "Logging out..." : "Log out"}
+          </button>
+        </div>
 
         <form
           onSubmit={handleSubmit}

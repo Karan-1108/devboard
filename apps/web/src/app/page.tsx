@@ -16,6 +16,10 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("mode") === "login") {
+      setMode("login");
+    }
+
     fetch("/api/auth/me")
       .then(async (response) => {
         if (!response.ok) return;
