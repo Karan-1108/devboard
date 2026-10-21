@@ -28,6 +28,19 @@ const dateOnly = z
 const companyField = z.string().trim().min(1).max(150);
 const roleField = z.string().trim().min(1).max(150);
 const notesField = z.string().trim().max(5000).nullable();
+const applicationUrlField = z.union([
+  z
+    .string()
+    .trim()
+    .max(2048)
+    .url("Enter a valid web address.")
+    .refine(
+      (value) => /^https?:\/\//i.test(value),
+      "Application links must start with http:// or https://.",
+    ),
+  z.literal(""),
+  z.null(),
+]);
 
 const createApplicationSchema = z
   .object({
@@ -36,6 +49,7 @@ const createApplicationSchema = z
     status: applicationStatus.default("APPLIED"),
     appliedAt: dateOnly.optional(),
     notes: notesField.optional(),
+    applicationUrl: applicationUrlField.optional(),
   })
   .strict();
 
@@ -46,6 +60,7 @@ const updateApplicationSchema = z
     status: applicationStatus,
     appliedAt: dateOnly,
     notes: notesField,
+    applicationUrl: applicationUrlField.optional(),
   })
   .strict();
 
@@ -96,12 +111,13 @@ applicationsRouter.post("/", async (request, response, next) => {
     if (!input.success) return invalidInput(response);
 
     const userId = response.locals.userId as string;
-    const { appliedAt, ...fields } = input.data;
+    const { appliedAt, applicationUrl, ...fields } = input.data;
 
     const application = await prisma.application.create({
       data: {
         ...fields,
         notes: fields.notes?.trim() || null,
+        applicationUrl: applicationUrl?.trim() || null,
         ...(appliedAt
           ? { appliedAt: new Date(`${appliedAt}T00:00:00.000Z`) }
           : {}),
@@ -122,13 +138,17 @@ applicationsRouter.put("/:id", async (request, response, next) => {
 
     const userId = response.locals.userId as string;
     const id = request.params.id;
+    const { applicationUrl, ...fields } = input.data;
 
     const updated = await prisma.application.updateMany({
       where: { id, userId },
       data: {
-        ...input.data,
-        notes: input.data.notes?.trim() || null,
-        appliedAt: new Date(`${input.data.appliedAt}T00:00:00.000Z`),
+        ...fields,
+        notes: fields.notes?.trim() || null,
+        ...(applicationUrl !== undefined
+          ? { applicationUrl: applicationUrl?.trim() || null }
+          : {}),
+        appliedAt: new Date(`${fields.appliedAt}T00:00:00.000Z`),
       },
     });
 

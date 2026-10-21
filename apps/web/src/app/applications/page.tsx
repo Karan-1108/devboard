@@ -9,6 +9,7 @@ type Application = {
   status: "APPLIED" | "INTERVIEW" | "OFFER" | "REJECTED";
   appliedAt: string;
   notes: string | null;
+  applicationUrl: string | null;
 };
 
 const today = new Date();
@@ -25,6 +26,7 @@ export default function ApplicationsPage() {
   const [status, setStatus] = useState<Application["status"]>("APPLIED");
   const [appliedAt, setAppliedAt] = useState(todayValue);
   const [notes, setNotes] = useState("");
+  const [applicationUrl, setApplicationUrl] = useState("");
   const [message, setMessage] = useState("Loading your applications...");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -93,7 +95,14 @@ export default function ApplicationsPage() {
       const response = await fetch("/api/applications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ company, role, status, appliedAt, notes }),
+        body: JSON.stringify({
+          company,
+          role,
+          status,
+          appliedAt,
+          notes,
+          applicationUrl,
+        }),
       });
       const data = await response.json();
 
@@ -106,6 +115,7 @@ export default function ApplicationsPage() {
       setStatus("APPLIED");
       setAppliedAt(todayValue);
       setNotes("");
+      setApplicationUrl("");
       await loadApplications();
     } catch (error) {
       setError(
@@ -132,6 +142,7 @@ export default function ApplicationsPage() {
           status: newStatus,
           appliedAt: application.appliedAt.slice(0, 10),
           notes: application.notes ?? "",
+          applicationUrl: application.applicationUrl ?? "",
         }),
       });
       const data = await response.json().catch(() => ({}));
@@ -217,6 +228,20 @@ export default function ApplicationsPage() {
             />
           </label>
 
+          <label className="sm:col-span-2">
+            <span className="mb-1 block text-sm text-slate-300">
+              Application link (optional)
+            </span>
+            <input
+              type="url"
+              maxLength={2048}
+              placeholder="https://company.com/careers/application"
+              value={applicationUrl}
+              onChange={(event) => setApplicationUrl(event.target.value)}
+              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
+            />
+          </label>
+
           <label>
             <span className="mb-1 block text-sm text-slate-300">Status</span>
             <select
@@ -291,6 +316,17 @@ export default function ApplicationsPage() {
               <p className="mt-2 text-sm text-slate-400">
                 Applied {application.appliedAt.slice(0, 10)}
               </p>
+
+              {application.applicationUrl && (
+                <a
+                  href={application.applicationUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-cyan-400 underline decoration-cyan-400/40 underline-offset-4 hover:text-cyan-300"
+                >
+                  Open application <span aria-hidden="true">↗</span>
+                </a>
+              )}
 
               {application.notes && (
                 <p className="mt-3 text-slate-300">{application.notes}</p>
